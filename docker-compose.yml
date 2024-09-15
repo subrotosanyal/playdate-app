@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    networks:
+      - app-network
+
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - "5001:5000"
+    environment:
+      - MONGO_URI=mongodb://root:example@mongodb:27017/playdateapp?authSource=admin
+      - JWT_SECRET=your_jwt_secret
+    depends_on:
+      - mongodb
+    networks:
+      - app-network
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  flutterweb:
+    build: ./mobile
+    container_name: flutterweb
+    ports:
+      - "3000:3000"  # Change the port mapping here to 3000
+    networks:
+      - app-network
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:
+
+networks:
+  app-network:
+    driver: bridge
